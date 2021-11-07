@@ -1,0 +1,618 @@
+#+TITLE: Finding Your (In)voice
+#+AUTHOR: Bala Ramadurai
+Youtube Video of the emacs conference 2021 talk - https://youtu.be/P3EMosDPobs
+* Ingredients for Invoicing
+
+1. Org-mode
+2. python environment setup in your org-mode config
+3. some libraries for python
+   - =pip install pandas=
+   - =pip install tabulate=
+   - =pip install num2words=
+4. yasnippet package
+5. [[https://miktex.org/download][MikTeX]] packages
+* Demo
+** Instructions     :noexport:
+*** Step 0: If you don't have your basic financial info setup, use the file bankinfo.org and customize that file
+*** Step 0.5: If you don't have the client setup done, use the snippet inv-setup
+**** Create a file =<Client-name>.org= in the =setup= folder
+*** Step 1: Use snippet inv-item to enter your rate table (Need to be done once per file)
+*** Step 2: Go to the headline Clock Table for Reference
+*** Step 3: =C-c C-c= on the clocktable to generate the clocktable for the client
+*** Step 4: Go to the headline Items
+*** Step 5: Run the first python source block using =C-c C-c=
+*** Step 6: Run the second python source block using =C-c C-c=
+*** Step 7: Run dispatcher =,eeC-slp= on the 'TODO Raise Invoice' headline
+#+NAME: Item-Master-ACMEClient1
+| Item                               |    HSN | Rate | GST Rate |
+|------------------------------------+--------+------+----------|
+| Teaching 2021 ACMEClient1 MBA 1 DT | 998393 |  100 |       18 |
+** TODO Raise Invoice
+:PROPERTIES:
+:EXPORT_TITLE: Tax Invoice
+:EXPORT_OPTIONS: title:nil author:nil date:nil
+:EXPORT_FILE_NAME: Invoices/06-11-2021-BR-Invoice-ACMEClient1.pdf
+:END:
+
+
+#+INCLUDE: setup/ACMEClient1.org::#fininfo
+#+INCLUDE: setup/bankinfo.org::#setup
+#+INCLUDE: setup/bankinfo.org::#tax
+-----
+#+ATTR_LATEX: :align a{4.5cm}
+| *Invoice No.*  06-11-2021-ACMEClient1 |
+
+# Customize the date format and Invoice numbering as per your preference and local rules
+
+#+ATTR_LATEX: :environment tabular :align p{1cm}p{2.75cm}p{2.1cm}p{1.7cm}p{0.75cm}p{1.65cm}
+| *GSTIN*    | {{{MyGST}}} | *Invoice Date* | 06-11-2021 | *State* | {{{MyGST_State}}} |
+
+#+INCLUDE: setup/ACMEClient1.org::#invoiceto
+-----
+#+ATTR_LATEX: :align a{4.5cm}
+| *Due Date*: 06-12-2021 |
+*** Clock Table for Reference                                                                              :noexport:
+#+BEGIN: clocktable :scope file :match "+Billable+ACMEClient1" :maxlevel 3 :block lastmonth :compact t :emphasize nil :header "#+NAME: clocktable-lastmonth-06-11-2021\n" :formula "$3=$2;t"
+#+NAME: clocktable-lastmonth-06-11-2021
+| Headline                           | Time |      |
+|------------------------------------+------+------|
+| *Total time*                         | *1:00* | 1.00 |
+|------------------------------------+------+------|
+| Teaching 2021 ACMEClient1 MBA 1 DT | 1:00 | 1.00 |
+#+TBLFM: $3=$2;t
+#+END
+
+*** Items
+
+#+begin_SRC python :results output raw :var clockdata=clocktable-lastmonth-06-11-2021 items=Item-Master-ACMEClient1 :exports results
+import os, sys, itertools, pandas as pd
+from tabulate import tabulate
+
+CurrencySymbol = 'INR'; 
+
+timesheetdf = pd.DataFrame(columns=['Item', 'Quantity', 'HSN', 'Rate', 'GSTRate', 'Taxable', 'Total GST', 'Total'])
+itemsdf = pd.DataFrame(items, columns=['Item', 'HSN', 'Rate', 'GSTRate'])
+clockdata_lines = clockdata[2:] # Change this index according to the depth of the headline
+
+for row in clockdata_lines:
+    name = row[0].replace('\_','').strip()
+    item, quantity, hsn, rate, gstrate, taxable, gst, total = '', 0, '',0,0,0,0,0
+    subitem = name
+    if row[2] != '':
+        quantity = float(row[2])
+        item = name
+        subitem = ''
+        loc = itemsdf[itemsdf.Item == name]
+        if len(loc) > 0:
+            hsn = int(loc.HSN)
+            rate = float(loc.Rate)
+            gstrate = float(loc.GSTRate)
+        taxable = round(quantity * rate, 2)
+        gst = round(gstrate * taxable/100, 2)
+        total = round(taxable + gst, 2)
+    timesheetdf.loc[len(timesheetdf)] = [item, quantity, hsn, rate, gstrate, taxable, gst, total]
+
+totaltaxable = pd.to_numeric(timesheetdf.Taxable, errors='coerce').sum()
+totalgst = pd.to_numeric(timesheetdf['Total GST'], errors='coerce').sum()
+amountdue = pd.to_numeric(timesheetdf.Total, errors='coerce').sum()
+print("#+ATTR_LATEX: :environment tabular :align a{4.25cm}p{1.25cm}a{1.5cm}p{1cm}a{1.25cm}p{1.25cm}a{1.15cm}p{1.35cm}")
+print('#+NAME: tab-items-06-11-2021')
+header_list = [' *Item*', '*Quantity*', '*HSN/SAC*', '*Rate(' + CurrencySymbol + ')*', '*GST(%)*', '*Taxable Value(' + CurrencySymbol + ')*', '*' + '*GST*' + ' (' + CurrencySymbol + ')*', '*Total(' + CurrencySymbol + ')* ']
+footer_list = [' *Total* ', ' ', ' ', ' ', ' ', totaltaxable, totalgst, amountdue]
+timesheetdf.loc[len(timesheetdf)] = footer_list
+print(tabulate(timesheetdf, header_list, tablefmt="orgtbl", floatfmt=".2f",showindex=False))
+#+end_SRC
+
+#+RESULTS:
+#+ATTR_LATEX: :environment tabular :align a{4.25cm}p{1.25cm}a{1.5cm}p{1cm}a{1.25cm}p{1.25cm}a{1.15cm}p{1.35cm}
+#+NAME: tab-items-06-11-2021
+| *Item*                               | *Quantity* | *HSN/SAC* | *Rate(INR)* | *GST(%)* | *Taxable Value(INR)* | **GST* (INR)* | *Total(INR)* |
+|------------------------------------+----------+---------+-----------+--------+--------------------+-------------+------------|
+| Teaching 2021 ACMEClient1 MBA 1 DT |      1.0 |  998393 |     100.0 |   18.0 |             100.00 |       18.00 |     118.00 |
+| *Total*                              |          |         |           |        |             100.00 |       18.00 |     118.00 |
+
+#+BEGIN_SRC python :results output raw :exports results :var taxable=tab-items-06-11-2021[-1,5] amountdue=tab-items-06-11-2021[-1,7] gst=tab-items-06-11-2021[-1,6]
+from num2words import num2words
+CurrencySymbol = 'INR '
+CurrencyWords = 'Rupees'
+tableofvalues = " | /Taxable Value/ | *" + CurrencySymbol + str(taxable) + "* |\n | /Total amount due/ | *" + CurrencySymbol + str(amountdue) + "* |\n | | " + CurrencyWords + " *" + num2words(amountdue, lang='en_IN') + "* Only |"
+print("#+ATTR_LATEX: :environment tabular :align la{8cm}")
+print(tableofvalues)
+print('# evaluate this and use =C-c C-v += or M-x org-babel-tangle-append or =,bA= ')
+print('#+BEGIN_SRC beancount :exports none :tangle ~/org/Fava/fin-data/finance.org\n' )
+print(',**** ACMEClient1 Invoice 2021-12-06')
+print('2021-12-06 * "ACMEClient1 Invoice" #tax-2020-21')
+print('  Income:ACMEClient1                   -' + str(taxable) + CurrencySymbol)
+print('  Equity:Taxes:IncomeTax                           ' + str(round(taxable*0.1,2)) + CurrencySymbol)
+print('  Equity:Taxes:CGST:Payable                          -' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Equity:Taxes:SGST:Payable                          -' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Expenses:Others                                    0.00 INR')
+print('  Assets:Liquid:AcmeBank:Current')
+print('  Assets:AccountsReceivable               -' + str(round(taxable-taxable*0.1+gst,2)) + CurrencySymbol)
+print('  Equity:TempAccount                            ' + str(round(taxable-taxable*0.1+gst,2)) + CurrencySymbol)
+print(' ')
+print('2021-11-06 * "ACMEClient1 Invoice Generated" #tax-2020-21')
+print('  Equity:Taxes:CGST:Payable                           ' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Equity:Taxes:SGST:Payable                           ' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Equity:Taxes:CGST:Paid                             -' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Equity:Taxes:SGST:Paid                             -' + str(round(gst/2,2)) + CurrencySymbol)
+print('  Assets:AccountsReceivable                ' + str(round(taxable-taxable*0.1+gst,2)) + CurrencySymbol)
+print('  Equity:TempAccount                           -' + str(round(taxable-taxable*0.1+gst,2)) + CurrencySymbol)
+print('#+END_SRC')
+#+END_SRC
+
+#+RESULTS:
+#+ATTR_LATEX: :environment tabular :align la{8cm}
+ | /Taxable Value/ | *INR 100.0* |
+ | /Total amount due/ | *INR 118.0* |
+ | | Rupees *one hundred and eighteen* Only |
+# evaluate this and use =C-c C-v += or M-x org-babel-tangle-append or =,bA= 
+#+BEGIN_SRC beancount :exports none :tangle ~/org/Fava/fin-data/finance.org
+
+,**** ACMEClient1 Invoice 2021-12-06
+2021-12-06 * "ACMEClient1 Invoice" #tax-2020-21
+  Income:ACMEClient1                   -100.0INR 
+  Equity:Taxes:IncomeTax                           10.0INR 
+  Equity:Taxes:CGST:Payable                          -9.0INR 
+  Equity:Taxes:SGST:Payable                          -9.0INR 
+  Expenses:Others                                    0.00 INR
+  Assets:Liquid:AcmeBank:Current
+  Assets:AccountsReceivable               -108.0INR 
+  Equity:TempAccount                            108.0INR 
+ 
+2021-11-06 * "ACMEClient1 Invoice Generated" #tax-2020-21
+  Equity:Taxes:CGST:Payable                           9.0INR 
+  Equity:Taxes:SGST:Payable                           9.0INR 
+  Equity:Taxes:CGST:Paid                             -9.0INR 
+  Equity:Taxes:SGST:Paid                             -9.0INR 
+  Assets:AccountsReceivable                108.0INR 
+  Equity:TempAccount                           -108.0INR 
+#+END_SRC
+
+#+INCLUDE: setup/bankinfo.org::#bank
+#+INCLUDE: setup/bankinfo.org::#terms
+
+*** TODO Fill cleartax with invoice                                                                        :noexport:
+SCHEDULED:<2021-11-06 14:00>
+https://gst.gov.in
+| *Invoice No.*  | 06-11-2021-ACMEClient1 |
+| *Invoice Date* | 06-11-2021 |
+
+*** TODO Check if Invoice is paid                                                                          :noexport:
+SCHEDULED: <2021-12-06 14:00>
+
+
+* TODO Teaching 2021 ACMEClient1 MBA 1 DT                                                         :Billable:ACMEClient1:
+:LOGBOOK:
+CLOCK: [2021-10-06 Wed 16:27]--[2021-10-06 Wed 17:27] =>  1:00
+:END:
+
+* Some customizations for the =invoice= yasnippet
+- =CurrencySymbol= and =CurrencyWords= according to your currency
+- Date format (My default is =%d-%m-%Y=)
+- Invoice numbering format (=Today's date-ClientName= is my default)
+
+* org-babel-tangle-append code
+
+#+BEGIN_SRC emacs-lisp
+   ;; https://emacs.stackexchange.com/questions/28098/how-to-change-org-mode-babel-tangle-write-to-file-way-as-append-instead-of-overr
+   (defun org-babel-tangle-append ()
+     "Append source code block at point to its tangle file.
+   The command works like `org-babel-tangle' with prefix arg
+   but `delete-file' is ignored."
+     (interactive)
+     (cl-letf (((symbol-function 'delete-file) #'ignore))
+       (org-babel-tangle '(4))))
+
+   (defun org-babel-tangle-append-setup ()
+     "Add key-binding C-c C-v C-t for `org-babel-tangle-append'."
+     (spacemacs/set-leader-keys-for-major-mode 'org-mode
+       "bA" 'org-babel-tangle-append)
+     (org-defkey org-mode-map (kbd "C-c C-v +") 'org-babel-tangle-append))
+
+   (add-hook 'org-mode-hook #'org-babel-tangle-append-setup)
+ #+END_SRC
+* Subtitles
+[No Music]
+
+[Music]
+
+what is an invoice?
+
+Invoice is a document
+
+that you give it to your customer
+
+so that they can pay you for your service or your goods.
+
+But you are a professor and consultant. Why do you need to generate invoices?
+
+Well...
+
+I do a service for my clients
+
+if I'm a consultant and when I'm a professor, I'm teaching students
+
+so I have to generate an invoice.
+
+Why not use Excel or something simple
+
+to generate your invoices?
+
+I've tried that.
+
+It's no good, when it, particularly, when there are
+
+many clients,
+
+managing Excels and templates becomes very very tricky.
+
+Why don't you hire someone, you know, professional to do these for you?
+
+i've tried it. I have to give them lots of information. Not that there's anything wrong with them.
+
+Just that I found it to be a bit too tricky.
+
+Professional software?
+
+Good point. I've tried that too. But, what's the fun in that, right?
+
+So what did you do?
+
+Haa.. this is the interesting part!
+
+I took a software called Emacs org-mode
+
+and with that I added python code to it.
+
+I added so many other things to it and
+
+then it became a really nice customizable way to generate invoices.
+
+Whoa whoa whoa...Just slow it down, bro.
+
+Give me the story.
+
+Hey. Okay... Okay... I will
+
+Story.
+
+Uh.. Story is simple.
+
+The client wanted an invoice.
+
+So, I generated an invoice.
+
+It wasn't good enough.
+
+So, I hacked some little bit of it.
+
+I changed every time a new client came.
+
+I had to do it all over again. I did that. I did it.
+
+Then I got really tired of it.
+
+And that's what led me to all these customizations.
+
+I want features. So rapid fire questions. Ready?
+
+Yep.
+
+Project management?
+
+Yep.
+
+Format customization?
+
+Yes.
+
+PDF export? 
+
+Yes. 
+
+Multi-client support?
+
+Yes. 
+
+Washing my clothes? 
+
+Yes... No.
+
+Haa. I was just testing if you're paying attention or not.
+
+Logo and signature customization?
+
+Yes.
+
+Multi-currency support? 
+
+Yes.
+
+Okay, enough talky or it's just... 
+
+Can you show me a demo that you did?
+
+Or is it just talky.
+
+Yes, of course. Demo.
+
+Okay, demo time. 
+
+Some ingredients for invoicing.
+
+Org mode, of course.
+
+Python environment and libraries for python.
+
+pandas, tabulate, numbers.
+
+yasnippet package, very useful.
+
+And I use for LaTeX packages.
+
+So, I have a project already set up. 
+
+This is what we have.
+
+The project is Teaching 2021 and you can set all this up.
+
+So let's start with the first and foremost.
+
+Okay, so we're going to use the yasnippet package.
+
+uh.. um.. sorry, the invoice, okay. 
+
+This one introduced it gives you this whole... 
+
+generates this whole bunch of code based on a template.
+
+All you're going to do is to type out the client's name.
+
+Okay and that's it that's all there is to it. 
+
+Okay there's a whole bunch of instructions that you can follow.
+
+If it's for the first time use bankinfo.org.
+
+Let's check out what bankinfo.org involves
+
+Okay so you can copy this template from from my github repository.
+
+Uh it's basically set up of the LaTeX tags 
+
+and particularly this text file which is a template.
+
+There's some personal info for all the details. 
+
+that you want bank information you can look at it in detail
+
+uh in my from my repo and the tax invoice.
+
+There are some basic constructs, 
+
+you can you can totally change any of these to your liking.
+
+Okay so that's bank info
+
+go back that's the first part
+
+for the second part is creating a client name.
+
+so let's look at this setup 
+
+and I have one created already.
+
+So, in order to create this, all you need to do 
+
+is to use the inv-setup 
+
+invoice setup for your client 
+
+and it will give you all the information 
+
+uh all you need to do is type in here 
+
+and then type in the client's name 
+
+exactly the same that you see as the file name 
+
+okay client one and that's it 
+
+you're all set for you 
+
+okay so that's what it looks like all the address 
+
+and stuff filled out here 
+
+okay and then uh next one is to 
+
+uh use uh the to uh one time 
+
+you're going to do the invoice item 
+
+which is the rate table 
+
+so let's do the invoice 
+
+I took sorry invoice item 
+
+this is item master 
+
+so here again another place 
+
+where you have to enter the client name 
+
+and your rate table is ready for use 
+
+okay so that was now we go to 
+
+step two which is clock table for reference 
+
+okay let's go to the clock table 
+
+already set up this for ACMEClient1 
+
+and I give it a tag billable 
+
+okay we will see that 
+
+Where have I done that?
+
+and okay so that's uh the client uh, you know, 
+
+ACMEClient1 table teaching 2021. 
+
+I've clocked it for the previous month 
+
+that's what you will see 
+
+let's see it again 
+
+okay that's uh let's put the instructions 
+
+um and then you go to clock table 
+
+to generate the clock table for the client 
+
+okay so clock table this is only for 
+
+your reference not going to be 
+
+exported and here we get a 
+
+clock table all right so with this 
+
+you get the clock table 
+
+okay now go into the items part 
+
+you will see two python blocks 
+
+which is what the next instruction says 
+
+go into the python block and do control cc 
+
+go to the control python source block 
+
+second one and do 
+
+Ctrl-cc... Ctrl-c Ctrl-c rather 
+
+and then finally come back to race 
+
+invoice and do dispatcher which is 
+
+export into pdf 
+
+okay let's do that first one is 
+
+I just run this code and it 
+
+generated this table for me 
+
+okay so it has all the details 
+
+now we go in uh to the 
+
+second source code block 
+
+and does all this 
+
+and it has generated this stuff 
+
+plus you should note that 
+
+for beancount it has also generated the block 
+
+for that it's all in the code you 
+
+can customize it if you're on ledger 
+
+you can customize it to the way 
+
+you want any accounts that you 
+
+want to change it's all 
+
+customizable here even the currency symbols 
+
+can be changed from INR and Rupees 
+
+to whatever currency you have 
+
+can be changed accordingly 
+
+okay and I have org-babel-tangle-append
+
+code that I will share in the 
+
+I've borrowed it from somebody on the internet 
+
+so I'll share that as well in my github repo 
+
+lastly I just want to share that 
+
+you can fill your GST website 
+
+with these info so you can you can put 
+
+in as many entries as you want in your snippet 
+
+customize it the way you want 
+
+I also added a month later due date reminder 
+
+saying if the invoice is paid or not okay 
+
+so um a few tips to end 
+
+uh this demo is you can customize 
+
+currency symbol and currency words 
+
+according to your own currency 
+
+I use the European slash Indian date format 
+
+which is %d-%m-%Y you can also 
+
+the in the language is Indian English so 
+
+it will change according the numerals 
+
+change according to the 
+
+Indian format uh numbering format 
+
+for invoice number is today's date 
+
+followed by client name 
+
+okay that's my default 
+
+you can customize that as well 
+
+okay let's try and export this to the subtree Ctrl-s 
+
+so that's step number seven 
+
+and there it is 
+
+the tax invoice for Dr Wiley Coyote 
+
+and with a lovely signature.
+
+[Interviewer:] Well, that's great!
+
+If I were to try this out, what do i do?
+
+Go to github.com, into my repository. 
+
+I'll leave my github url and you can download it 
+
+and use it 
+
+and let me know how it pans out for you.
+
+[Interviewer:] I have spent so much time on this may i invoice you

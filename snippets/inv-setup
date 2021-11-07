@@ -1,0 +1,22 @@
+# -*- mode: snippet -*-
+# name: inv-setup
+# key: inv-setup
+# --
+
+*** Fin info                                                                                             :noexport:
+:PROPERTIES:
+:CUSTOM_ID: fininfo
+:END:
+
+#+MACRO: Client_Address_${1:Client} Accounts, Acme Institute of Management Studies, Acme Hills Road, Coyote Colonies, Road Runner Country
+#+MACRO: Client_GST_$1 27XXXXXXXXXXX
+#+MACRO: Client_GST_CODE_$1 27
+#+MACRO: Client_State_$1 Maharashtra
+*** Invoice to:
+:PROPERTIES:
+:CUSTOM_ID: invoiceto
+:END:
+#+ATTR_LATEX: :align a{3.5cm}a{10.5cm}
+| *Customer Name & Address* | {{{Client_Address_$1}}} |
+| *Customer GSTIN*          | {{{Client_GST_$1}}}     |
+| *Place of Supply*       | {{{Client_State_$1}}}   |

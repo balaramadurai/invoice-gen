@@ -1,0 +1,71 @@
+** Setup                                                                                                  :noexport:
+:PROPERTIES:
+:CUSTOM_ID: setup
+:END:
+*** LaTeX
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS: [10pt]
+#+LATEX_HEADER: \input{../assets/structure.tex} 
+#+OPTIONS: ':nil *:t -:t ::t <:t H:5 \n:nil ^:{} arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:nil e:t
+#+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:nil
+#+OPTIONS: tags:t tasks:nil tex:t timestamp:nil title:nil toc:nil todo:t |:t
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+#+STARTUP: noinlineimages
+#+STARTUP: entitiespretty
+
+*** Personal Info
+#+MACRO: Logo [[file:../assets/CompanyLogo.png]]
+#+MACRO: Company_Name Wile E. Coyote & Co.
+#+MACRO: Full_Name Wile E. Coyote
+#+MACRO: Name Wile Coyote
+#+MACRO: Address 1, Infinity Ways, 2 Get Bouldered, Still Road Runner Country
+#+MACRO: Phone +91-9999-9999-99
+#+MACRO: Emailad wile@wileecoyote.com
+#+MACRO: Sign [[file:../assets/signature.png]]
+#+MACRO: MyGST 27XXXXXXXXX
+#+MACRO: MyGST_Code 27
+#+MACRO: MyGST_State Maharashtra
+*** Bank Info
+#+MACRO: Bank_ACNum 1234567890
+#+MACRO: Bank_Name Acme Bank
+#+MACRO: Bank_Address 2, Beep Beep, 4 Crazy Inventions Road, Road Runner Country
+#+MACRO: Bank_IFSC ACME0000123
+
+
+** Tax Invoice for Dr. Wile E. Coyote
+:PROPERTIES:
+:CUSTOM_ID: tax
+:END:
+#+LATEX: \thispagestyle{empty}
+#+LATEX: \vspace{-2em}
+#+ATTR_LaTeX: :environment tabular :align Cm{12cm}
+| {{{Logo}}}  | {{{Address}}} $\newline$ Email: *{{{Emailad}}}* $\newline$ Ph: *{{{Phone}}}* |
+
+#+LATEX: \vspace{-2em}
+
+** Bank Details
+:PROPERTIES:
+:CUSTOM_ID: bank
+:END:
+- Please transfer total amount to :: *{{{Full_Name}}}*                                                  
+- *Current Account Number*        :: {{{Bank_ACNum}}}
+- *Bank Name*    ::                  {{{Bank_Name}}} ({{{Bank_IFSC}}})
+- Address ::  {{{Bank_Address}}}
+
+
+
+** Terms & Conditions
+:PROPERTIES:
+:CUSTOM_ID: terms
+:END:
+If you have any questions about this invoice, @@html:<br>@@please contact {{{Name}}}, {{{Phone}}}\
+Thank You For Your Business!
+#+ATTR_LATEX: :align >{\raggedright\arraybackslash}p{0.98\linewidth}
+| *Authorized Signatory*  |
+#+ATTR_LATEX:  :width 3cm :center nil
+{{{Sign}}}
+#+ATTR_LATEX: :align >{\raggedright\arraybackslash}p{0.98\linewidth}
+| *{{{Full_Name}}}* |

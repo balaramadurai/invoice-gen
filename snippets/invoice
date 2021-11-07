@@ -1,0 +1,123 @@
+# -*- mode: snippet -*-
+# name: invoice
+# key: invoice
+# expand-env: ((yas-indent-line 'fixed))
+# --
+
+** TODO Raise Invoice
+:PROPERTIES:
+:EXPORT_TITLE: Tax Invoice
+:EXPORT_OPTIONS: title:nil author:nil date:nil
+:EXPORT_FILE_NAME: Invoices/`(format-time-string "%d-%m-%Y")`-BR-Invoice-${1:Client}.pdf
+:END:
+
+# Step 0: If you don't have your basic financial info setup, use the file bankinfo.org and customize that file
+# Step 0.5: If you don't have the client setup done, use the snippet inv-setup
+# Step 1: Go to the headline Clock Table for Reference
+# Step 2: =C-c C-c= on the clocktable to generate the clocktable for the client
+# Step 3: Go to the headline Items
+# Step 4: Run the first python source block using =C-c C-c=
+# Step 5: Run the second python source block using =C-c C-c=
+
+# Run dispatcher =,eeC-slp= on the 'TODO Raise Invoice' headline
+#+INCLUDE: ~/org/agenda/setup/$1.org::#fininfo
+#+INCLUDE: ~/org/agenda/setup/bankinfo.org::#setup
+#+INCLUDE: ~/org/agenda/setup/bankinfo.org::#tax
+-----
+#+ATTR_LATEX: :align a{4.5cm}
+| *Invoice No.*  `(format-time-string "%d-%m-%Y")`-$1 |
+
+#+ATTR_LATEX: :environment tabular :align p{1cm}p{2.75cm}p{2.1cm}p{1.7cm}p{0.75cm}p{1.65cm}
+| *GSTIN*    | {{{MyGST}}} | *Invoice Date* | `(format-time-string "%d-%m-%Y")` | *State* | {{{MyGST_State}}} |
+
+#+INCLUDE: ~/org/agenda/setup/$1.org::#invoiceto
+-----
+#+ATTR_LATEX: :align a{4.5cm}
+| *Due Date*: `(format-time-string "%d-%m-%Y" (time-add (days-to-time 30) nil))` |
+*** Clock Table for Reference                                                                              :noexport:
+#+BEGIN: clocktable :scope file :match "+Billable+$1" :maxlevel 1 :block lastmonth :compact t :emphasize nil :header "#+NAME: clocktable-lastmonth-`(format-time-string "%d-%m-%Y")`\n" :formula "\$3=\$2;t"
+#+END
+
+*** Items
+
+#+begin_SRC python :results output raw :var clockdata=clocktable-lastmonth-`(format-time-string "%d-%m-%Y")` items=Item-Master-$1 :exports results
+import os, sys, itertools, pandas as pd
+from tabulate import tabulate
+from currency import currency  # from python library - nh-currency
+
+CurrencySymbol = currency.symbol('INR'); 
+
+timesheetdf = pd.DataFrame(columns=['Item', 'Quantity', 'HSN', 'Rate', 'GSTRate', 'Taxable', 'Total GST', 'Total'])
+itemsdf = pd.DataFrame(items, columns=['Item', 'HSN', 'Rate', 'GSTRate'])
+clockdata_lines = clockdata[2:]
+
+for row in clockdata_lines:
+    name = row[0].replace('\_','').strip()
+    item, quantity, hsn, rate, gstrate, taxable, gst, total = '', 0, '',0,0,0,0,0
+    subitem = name
+    if row[2] != '':
+        quantity = float(row[2])
+        item = name
+        subitem = ''
+        loc = itemsdf[itemsdf.Item == name]
+        if len(loc) > 0:
+            hsn = int(loc.HSN)
+            rate = float(loc.Rate)
+            gstrate = float(loc.GSTRate)
+        taxable = round(quantity * rate, 2)
+        gst = round(gstrate * taxable/100, 2)
+        total = round(taxable + gst, 2)
+    timesheetdf.loc[len(timesheetdf)] = [item, quantity, hsn, rate, gstrate, taxable, gst, total]
+
+totaltaxable = pd.to_numeric(timesheetdf.Taxable, errors='coerce').sum()
+totalgst = pd.to_numeric(timesheetdf['Total GST'], errors='coerce').sum()
+amountdue = pd.to_numeric(timesheetdf.Total, errors='coerce').sum()
+print("#+ATTR_LATEX: :environment tabular :align a{4.25cm}p{1.25cm}a{1.5cm}p{1cm}a{1.25cm}p{1.25cm}a{1.15cm}p{1.35cm}")
+print('#+NAME: tab-items-`(format-time-string "%d-%m-%Y")`')
+header_list = [' *Item*', '*Quantity*', '*HSN/SAC*', '*Rate(' + CurrencySymbol + ')*', '*GST(%)*', '*Taxable Value(' + CurrencySymbol + ')*', '*' + '*GST*' + ' (' + CurrencySymbol + ')*', '*Total(' + CurrencySymbol + ')* ']
+footer_list = [' *Total* ', ' ', ' ', ' ', ' ', totaltaxable, totalgst, amountdue]
+timesheetdf.loc[len(timesheetdf)] = footer_list
+print(tabulate(timesheetdf, header_list, tablefmt="orgtbl", floatfmt=".2f",showindex=False))
+#+end_SRC
+
+#+BEGIN_SRC python :results output raw :exports results :var taxable=tab-items-`(format-time-string "%d-%m-%Y")`[-1,5] amountdue=tab-items-`(format-time-string "%d-%m-%Y")`[-1,7] gst=tab-items-`(format-time-string "%d-%m-%Y")`[-1,6]
+from num2words import num2words
+CurrencyCode = ' INR'
+tableofvalues = " | /Taxable Value/ | *₹" + str(taxable) + "* |\n | /Total amount due/ | *₹" + str(amountdue) + "* |\n | | Rupees *" + num2words(amountdue, lang='en_IN') + "* Only |"
+print("#+ATTR_LATEX: :environment tabular :align la{8cm}")
+print(tableofvalues)
+print('# evaluate this and use =C-c C-v += or M-x org-babel-tangle-append or =,bA= ')
+print('#+BEGIN_SRC beancount :exports none :tangle ~/org/Fava/fin-data/ALK-finance.org\n' )
+print(',**** $1 Invoice `(format-time-string "%Y-%m-%d" (time-add (days-to-time 30) nil))`')
+print('`(format-time-string "%Y-%m-%d" (time-add (days-to-time 30) nil))` * "$1 Invoice" #tax-2020-21')
+print('  Income:WagesSalary:Lunu:$1                   -' + str(taxable) + CurrencyCode)
+print('  Equity:Taxes:IncomeTax:Lunu                           ' + str(round(taxable*0.1,2)) + CurrencyCode)
+print('  Equity:Taxes:Lunu:CGST:Payable                          -' + str(round(gst/2,2)) + CurrencyCode)
+print('  Equity:Taxes:Lunu:SGST:Payable                          -' + str(round(gst/2,2)) + CurrencyCode)
+print('  Expenses:Others                                    0.00 INR')
+print('  Assets:Liquid:HDFCBank:Current:Lunu')
+print('  Assets:AccountsReceivable:Lunu               -' + str(round(taxable-taxable*0.1+gst,2)) + CurrencyCode)
+print('  Equity:TempAccount                            ' + str(round(taxable-taxable*0.1+gst,2)) + CurrencyCode)
+print(' ')
+print('`(format-time-string "%Y-%m-%d")` * "$1 Invoice Generated" #tax-2020-21')
+print('  Equity:Taxes:Lunu:CGST:Payable                           ' + str(round(gst/2,2)) + CurrencyCode)
+print('  Equity:Taxes:Lunu:SGST:Payable                           ' + str(round(gst/2,2)) + CurrencyCode)
+print('  Equity:Taxes:Lunu:CGST:Paid                             -' + str(round(gst/2,2)) + CurrencyCode)
+print('  Equity:Taxes:Lunu:SGST:Paid                             -' + str(round(gst/2,2)) + CurrencyCode)
+print('  Assets:AccountsReceivable:Lunu                ' + str(round(taxable-taxable*0.1+gst,2)) + CurrencyCode)
+print('  Equity:TempAccount                           -' + str(round(taxable-taxable*0.1+gst,2)) + CurrencyCode)
+print('#+END_SRC')
+#+END_SRC
+
+#+INCLUDE: ~/org/agenda/setup/bankinfo.org::#bank
+#+INCLUDE: ~/org/agenda/setup/bankinfo.org::#terms
+
+*** TODO Fill cleartax with invoice                                                                        :noexport:
+SCHEDULED:<`(format-time-string "%Y-%m-%d")` 14:00>
+https://gst.cleartax.in/?ref=homepage-login-dropdown-gst
+| *Client GST*   | {{{Client_GST_$1}}} |
+| *Invoice No.*  | `(format-time-string "%d-%m-%Y")`-$1 |
+| *Invoice Date* | `(format-time-string "%d-%m-%Y")` |
+
+*** TODO Check if Invoice is paid                                                                          :noexport:
+SCHEDULED: <`(org-read-date nil nil "+30d")` 14:00>

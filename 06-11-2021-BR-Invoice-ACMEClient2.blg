@@ -1,0 +1,5 @@
+[0] Config.pm:311> INFO - This is Biber 2.16
+[1] Config.pm:314> INFO - Logfile is '06-11-2021-BR-Invoice-ACMEClient2.blg'
+[692] biber-MSWIN64:340> INFO - === 
+[2143] Utils.pm:411> ERROR - Cannot find '06-11-2021-BR-Invoice-ACMEClient2.bcf'!
+[2143] Biber.pm:132> INFO - ERRORS: 1

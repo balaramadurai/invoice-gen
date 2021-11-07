@@ -1,0 +1,103 @@
+% Intended LaTeX compiler: pdflatex
+\documentclass[10pt]{article}
+
+\input{../assets/structure.tex}
+\date{}
+\title{Tax Invoice}
+\hypersetup{
+ pdfauthor={Bala Ramadurai},
+ pdftitle={Tax Invoice},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 27.2 (Org mode 9.4.6)}, 
+ pdflang={English}}
+\begin{document}
+
+\section{Tax Invoice for Dr. Wile E. Coyote}
+\label{tax}
+\thispagestyle{empty}
+\vspace{-2em}
+\begin{center}
+\begin{tabular}{Cm{12cm}}
+\begin{center}
+\includegraphics[width=.9\linewidth]{../assets/CompanyLogo.png}
+\end{center} & 1, Infinity Ways, 2 Get Bouldered, Still Road Runner Country \(\newline\) Email: \textbf{wile@wileecoyote.com} \(\newline\) Ph: \textbf{+91-9999-9999-99}\\
+\end{tabular}
+\end{center}
+
+\vspace{-2em}
+
+\noindent\rule{\textwidth}{0.5pt}
+\begin{center}
+\begin{tabular}{a{4.5cm}}
+\textbf{Invoice No.}  06-11-2021-ACMEClient2\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{p{1cm}p{2.75cm}p{2.1cm}p{1.7cm}p{0.75cm}p{1.65cm}}
+\textbf{GSTIN} & 27XXXXXXXXX & \textbf{Invoice Date} & 06-11-2021 & \textbf{State} & Maharashtra\\
+\end{tabular}
+\end{center}
+
+\section{Invoice to:}
+\label{invoiceto}
+\begin{center}
+\begin{tabular}{a{3.5cm}a{10.5cm}}
+\textbf{Customer Name \& Address} & Accounts, Acme Institute of Management, Coyote Hills Road, Roadrunner country\\
+\textbf{Customer GSTIN} & 27XXXXXXXXXXX\\
+\textbf{Place of Supply} & Maharashtra\\
+\end{tabular}
+\end{center}
+
+\noindent\rule{\textwidth}{0.5pt}
+\begin{center}
+\begin{tabular}{a{4.5cm}}
+\textbf{Due Date}: 06-12-2021\\
+\end{tabular}
+\end{center}
+\section{Items}
+\label{sec:orgaff8825}
+
+\begin{table}[htbp]
+\label{tab-items-06-11-2021}
+\centering
+\begin{tabular}{a{4.25cm}p{1.25cm}a{1.5cm}p{1cm}a{1.25cm}p{1.25cm}a{1.15cm}p{1.35cm}}
+\textbf{Item} & \textbf{Quantity} & \textbf{HSN/SAC} & \textbf{Rate(INR)} & \textbf{GST(\%)} & \textbf{Taxable Value(INR)} & \textbf{*GST} (INR)* & \textbf{Total(INR)}\\
+\hline
+Teaching 2021 ACMEClient2 MBA 1 DT & 1.0 & 998393 & 100.0 & 18.0 & 100.00 & 18.00 & 118.00\\
+\textbf{Total} &  &  &  &  & 100.00 & 18.00 & 118.00\\
+\end{tabular}
+\end{table}
+
+\begin{center}
+\begin{tabular}{la{8cm}}
+\emph{Taxable Value} & * INR 100.0*\\
+\emph{Total amount due} & * INR 118.0*\\
+ & Rupees \textbf{one hundred and eighteen} Only\\
+\end{tabular}
+\end{center}
+\subsection{Bank Details}
+\label{bank}
+\begin{description}
+\item[{Please transfer total amount to}] \textbf{Wile E. Coyote}
+\item[{\textbf{Current Account Number}       }] 1234567890
+\item[{\textbf{Bank Name}   }] Acme Bank (ACME0000123)
+\item[{Address}] 2, Beep Beep, 4 Crazy Inventions Road, Road Runner Country
+\end{description}
+\subsection{Terms \& Conditions}
+\label{terms}
+If you have any questions about this invoice, please contact Wile Coyote, +91-9999-9999-99$\backslash$
+Thank You For Your Business!
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.98\linewidth}}
+\textbf{Authorized Signatory}\\
+\end{tabular}
+\end{center}
+\includegraphics[width=3cm]{../assets/signature.png}
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.98\linewidth}}
+\textbf{Wile E. Coyote}\\
+\end{tabular}
+\end{center}
+\end{document}

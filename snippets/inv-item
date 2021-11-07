@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: item-master
+# key: inv-item
+# --
+
+#+NAME: Item-Master
+| Item                               |    HSN | Rate | GST Rate |
+|------------------------------------+--------+------+----------|
+| Teaching 2021 ${1:Client} MBA 1 DT | 998393 |  100 |       18 |

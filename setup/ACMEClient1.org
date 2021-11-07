@@ -1,0 +1,17 @@
+*** Fin info                                                                                             :noexport:
+:PROPERTIES:
+:CUSTOM_ID: fininfo
+:END:
+
+#+MACRO: Client_Address_ACMEClient1 Accounts, Acme Institute of Management, Coyote Hills Road, Roadrunner country
+#+MACRO: Client_GST_ACMEClient1 27XXXXXXXXX
+#+MACRO: Client_GST_CODE_ACMEClient1 27
+#+MACRO: Client_State_ACMEClient1 RR
+*** Invoice to:
+:PROPERTIES:
+:CUSTOM_ID: invoiceto
+:END:
+#+ATTR_LATEX: :align a{3.5cm}a{10.5cm}
+| *Customer Name & Address* | {{{Client_Address_ACMEClient1}}} |
+| *Customer GSTIN*          | {{{Client_GST_ACMEClient1}}}     |
+| *Place of Supply*       | {{{Client_State_ACMEClient1}}}   |

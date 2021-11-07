@@ -1,0 +1,70 @@
+%----------------------------------------------------------------------------------------
+%	VARIOUS REQUIRED PACKAGES AND CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabulary}
+\usepackage{graphicx} % Required for including pictures
+
+\usepackage{xcolor,colortbl} % Required for specifying colors by name
+\definecolor{ocre}{RGB}{0,0,139} % Define the orange color used for highlighting throughout the book
+\definecolor{lightblue}{RGB}{173,216,230}
+
+%----------------------------------------------------------------------------------------
+%	MARGINS
+%----------------------------------------------------------------------------------------
+
+\usepackage{geometry} % Required for adjusting page dimensions and margins
+
+\geometry{
+	a4paper, % Change to letterpaper for US Letter
+	top=2cm, 
+	bottom=2cm, 
+	left=2cm, 
+	right=2cm
+}
+
+%----------------------------------------------------------------------------------------
+%	FONTS
+%----------------------------------------------------------------------------------------
+
+%\usepackage{avant} % Use the Avantgarde font for headings
+%\usepackage{times} % Use the Times font for headings
+%\usepackage{wasysym}
+\usepackage{tikzsymbols}
+%\usepackage{mathptmx} % Use the Adobe Times Roman as the default text font together with math symbols from the Sym­bol, Chancery and Com­puter Modern fonts
+
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+%\usepackage[utf8]{inputenc} % Required for including letters with accents
+\usepackage{fontspec}
+%\usepackage[T2A,T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+%% \setmainfont[Ligatures=TeX]{Linux Libertine O}
+\usepackage[nf]{coelacanth}
+\setsansfont{FreeSans}
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+
+\usepackage{tfrupee}
+\usepackage{newunicodechar}
+  \newunicodechar{₹}{\rupee}
+
+\usepackage{titlesec}
+\titleformat{name=\subsection}[block]
+            {\sffamily\large\color{white}}
+  {}
+  {2pt}
+  {\colorsection}
+\titlespacing{\section}{0pt}{\baselineskip}{\baselineskip}
+
+
+\titleformat{name=\section}[block]
+            {\sffamily\huge\color{white}}
+  {}
+  {0pt}
+  {\colorsection}
+\titlespacing{\section}{0pt}{\baselineskip}{\baselineskip}
+
+\newcommand{\colorsection}[1]{%
+  \colorbox{ocre}{\parbox{\dimexpr\textwidth-2\fboxsep}{ #1}}}
+
+\newcolumntype{a}{>{\columncolor{lightblue}}p}
+\newcolumntype{C}{>{\centering\arraybackslash} m{2cm} }
